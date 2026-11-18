@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f8f3">
+  <title>Little Wins — Your daily progress</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #1d2b24;
+      --muted: #78827b;
+      --green: #355c46;
+      --green-dark: #294836;
+      --lime: #d8f084;
+      --paper: #f7f8f3;
+      --line: #e9ece5;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      background:
+        radial-gradient(ellipse at 86% 9%, #e8efd9 0, transparent 31rem),
+        var(--paper);
+      color: var(--ink);
+      font: 16px/1.5 "Segoe UI", Arial, sans-serif;
+    }
+
+    button { font: inherit; }
+
+    .page {
+      width: min(1056px, calc(100% - 48px));
+      margin: 0 auto;
+      padding: 34px 0 42px;
+    }
+
+    .topbar, .brand, .date, .eyebrow, .goal-heading, .card-top, .footer {
+      display: flex;
+      align-items: center;
+    }
+
+    .topbar, .card-top, .footer { justify-content: space-between; }
+
+    .brand { gap: 11px; font-size: 15px; font-weight: 750; letter-spacing: -.3px; }
+
+    .brand-mark {
+      display: grid;
+      width: 35px;
+      height: 35px;
+      place-items: center;
+      border-radius: 12px;
+      background: var(--green);
+      color: var(--lime);
+    }
+
+    .date {
+      gap: 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .date svg { color: var(--green); }
+
+    .intro { max-width: 610px; margin: 68px auto 39px; text-align: center; }
+
+    .eyebrow {
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 13px;
+      color: var(--green);
+      font-size: 11px;
+      font-weight: 750;
+      letter-spacing: 1.65px;
+      text-transform: uppercase;
+    }
+
+    .eyebrow span {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #91b354;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(39px, 6vw, 61px);
+      font-weight: 650;
+      letter-spacing: -3.4px;
+      line-height: 1.07;
+    }
+
+    h1 em { color: #63814f; font-family: Georgia, serif; font-weight: 400; }
+
+    .intro > p {
+      margin: 15px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: minmax(0, 1.55fr) minmax(270px, .85fr);
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .count-card, .goal-card, .note-card { border-radius: 22px; }
+
+    .count-card {
+      position: relative;
+      overflow: hidden;
+      min-height: 328px;
+      padding: 31px 34px 28px;
+      background: var(--green);
+      color: white;
+    }
+
+    .count-card::after {
+      position: absolute;
+      top: -90px;
+      right: -66px;
+      width: 270px;
+      height: 270px;
+      border: 1px solid #ffffff17;
+      border-radius: 50%;
+      box-shadow: 0 0 0 30px #ffffff08, 0 0 0 62px #ffffff06;
+      content: "";
+      pointer-events: none;
+    }
+
+    .card-top { position: relative; z-index: 1; }
+
+    .card-label { color: #e0eadf; font-size: 13px; font-weight: 600; }
+
+    .saved {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #dae8c4;
+      font-size: 11px;
+    }
+
+    .saved svg { color: var(--lime); }
+
+    .count {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      margin: 29px 0 25px;
+    }
+
+    output {
+      font-size: clamp(76px, 11vw, 104px);
+      font-weight: 550;
+      letter-spacing: -7px;
+      line-height: .96;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .count-caption { color: #dce8df; font-size: 14px; }
+
+    .controls { position: relative; z-index: 1; display: flex; gap: 10px; }
+
+    .control {
+      display: inline-flex;
+      min-height: 46px;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 19px;
+      border: 1px solid transparent;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 700;
+      transition: transform .16s ease, background .16s ease;
+    }
+
+    .control:hover { transform: translateY(-2px); }
+    .control:active { transform: translateY(0); }
+
+    .control:focus-visible, .goal-button:focus-visible {
+      outline: 3px solid #a3bf70;
+      outline-offset: 3px;
+    }
+
+    .control-primary { background: var(--lime); color: var(--ink); }
+    .control-primary:hover { background: #e4fa9c; }
+    .control-secondary { border-color: #ffffff3d; background: transparent; color: white; }
+    .control-secondary:hover { background: #ffffff12; }
+    .control-secondary:disabled { cursor: not-allowed; opacity: .42; transform: none; }
+
+    .goal-card {
+      display: flex;
+      min-height: 328px;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 27px 26px 23px;
+      border: 1px solid var(--line);
+      background: #fff;
+      text-align: center;
+    }
+
+    .goal-heading { align-self: stretch; justify-content: space-between; }
+    .goal-title { font-size: 13px; font-weight: 750; }
+
+    .goal-pill {
+      padding: 5px 9px;
+      border-radius: 99px;
+      background: #f1f5e8;
+      color: var(--green);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .ring {
+      display: grid;
+      width: 145px;
+      height: 145px;
+      flex: 0 0 auto;
+      place-items: center;
+      margin: 24px 0 11px;
+      border-radius: 50%;
+      background: conic-gradient(#82a95e var(--progress, 0%), #edf0e9 0);
+      transition: background .3s ease;
+    }
+
+    .ring-inner {
+      display: flex;
+      width: 119px;
+      height: 119px;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: white;
+    }
+
+    .ring-value { font-size: 36px; font-weight: 650; letter-spacing: -2px; line-height: 1.05; }
+    .ring-caption { margin-top: 4px; color: var(--muted); font-size: 11px; }
+
+    .goal-copy { min-height: 22px; margin: 0 0 14px; color: var(--muted); font-size: 12px; }
+    .goal-copy.complete { color: var(--green); font-weight: 700; }
+
+    .goal-options { display: flex; align-items: center; gap: 7px; }
+
+    .goal-option-label { margin-right: 3px; color: var(--muted); font-size: 11px; }
+
+    .goal-button {
+      min-width: 34px;
+      height: 30px;
+      padding: 0 8px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: white;
+      color: #657069;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 650;
+    }
+
+    .goal-button[aria-pressed="true"] { border-color: #b7cba0; background: #f1f5e8; color: var(--green); }
+
+    .note-card {
+      display: flex;
+      min-height: 87px;
+      grid-column: 1 / -1;
+      align-items: center;
+      gap: 14px;
+      padding: 18px 22px;
+      border: 1px solid var(--line);
+      background: #ffffffa6;
+    }
+
+    .note-icon {
+      display: grid;
+      width: 42px;
+      height: 42px;
+      flex: 0 0 auto;
+      place-items: center;
+      border-radius: 14px;
+      background: #eff3e6;
+      color: var(--green);
+    }
+
+    .note-text { color: var(--muted); font-size: 12px; }
+    .note-text strong { display: block; margin-bottom: 2px; color: var(--ink); font-size: 13px; }
+
+    .footer { margin-top: 24px; color: #939c95; font-size: 11px; }
+    .reset {
+      padding: 5px 0;
+      border: 0;
+      background: none;
+      color: #78827b;
+      cursor: pointer;
+      font-size: 11px;
+    }
+
+    .reset:hover { color: var(--green-dark); text-decoration: underline; }
+    .reset:focus-visible { outline: 2px solid #82a95e; outline-offset: 3px; }
+
+    @media (max-width: 680px) {
+      .page { width: min(100% - 32px, 480px); padding-top: 20px; }
+      .intro { margin: 52px auto 28px; }
+      h1 { letter-spacing: -2.4px; }
+      .dashboard { grid-template-columns: 1fr; gap: 13px; }
+      .count-card { min-height: 300px; padding: 25px 24px; }
+      .goal-card { min-height: 295px; }
+      .note-card { grid-column: auto; }
+      .footer { margin-top: 17px; }
+    }
+
+    @media (max-width: 380px) {
+      .date { font-size: 11px; }
+      .control { padding: 0 14px; }
+      .count { gap: 8px; }
+      .count-caption { font-size: 12px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M12 20V10m0 4c0-5-3-7-8-7 0 5 2 8 8 8Zm0-3c0-4 2.5-6 7-6 0 4.5-2 7-7 7Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <span>little wins</span>
+      </div>
+      <div class="date">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <rect x="3.5" y="5" width="17" height="16" rx="3" stroke="currentColor" stroke-width="1.7"/>
+          <path d="M7.5 3v4M16.5 3v4M4 10h16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+        </svg>
+        <time id="today"></time>
+      </div>
+    </header>
+
+    <main>
+      <section class="intro" aria-labelledby="page-title">
+        <div class="eyebrow"><span aria-hidden="true"></span> A fresh start, every day</div>
+        <h1 id="page-title">Small wins.<br><em>Big momentum.</em></h1>
+        <p>Every little thing you do counts. Keep showing up for yourself.</p>
+      </section>
+
+      <section class="dashboard" aria-label="Your daily progress">
+        <article class="count-card">
+          <div class="card-top">
+            <span class="card-label">Your wins today</span>
+            <span class="saved">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M5 12.5 9.5 17 19 7.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Saved on this device
+            </span>
+          </div>
+          <div class="count">
+            <output id="count" aria-live="polite" aria-atomic="true">0</output>
+            <span class="count-caption">good things<br>done</span>
+          </div>
+          <div class="controls">
+            <button class="control control-primary" id="add-one" type="button">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              Add a win
+            </button>
+            <button class="control control-secondary" id="remove-one" type="button" aria-label="Remove one win" title="Remove one win" disabled>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </button>
+          </div>
+        </article>
+
+        <article class="goal-card">
+          <div class="goal-heading">
+            <span class="goal-title">Daily progress</span>
+            <span class="goal-pill" id="goal-pill">Keep going</span>
+          </div>
+          <div class="ring" id="progress-ring" role="img" aria-label="0% of daily goal">
+            <div class="ring-inner">
+              <span class="ring-value" id="progress-value">0%</span>
+              <span class="ring-caption">of your goal</span>
+            </div>
+          </div>
+          <p class="goal-copy" id="goal-copy" aria-live="polite">A little progress is still progress.</p>
+          <div class="goal-options" role="group" aria-label="Choose your daily goal">
+            <span class="goal-option-label">Goal</span>
+            <button class="goal-button" type="button" data-goal="5" aria-pressed="false">5</button>
+            <button class="goal-button" type="button" data-goal="10" aria-pressed="true">10</button>
+            <button class="goal-button" type="button" data-goal="20" aria-pressed="false">20</button>
+          </div>
+        </article>
+
+        <aside class="note-card">
+          <span class="note-icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M12 3.5 14.2 9l5.8.5-4.4 3.8 1.4 5.7L12 16l-5 3 1.4-5.7L4 9.5 9.8 9 12 3.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <div class="note-text">
+            <strong>Progress, not perfection.</strong>
+            There’s no wrong way to make today a little better.
+          </div>
+        </aside>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>A gentle reminder: you're doing better than you think.</span>
+      <button class="reset" id="reset" type="button">Reset today</button>
+    </footer>
+  </div>
+
+  <script>
+    const date = new Date();
+    const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    const storageKey = `little-wins-${dateKey}`;
+    const savedState = JSON.parse(localStorage.getItem(storageKey) || "{}");
+    let count = Number.isInteger(savedState.count) && savedState.count >= 0 ? savedState.count : 0;
+    let goal = [5, 10, 20].includes(savedState.goal) ? savedState.goal : 10;
+
+    const countOutput = document.querySelector("#count");
+    const removeButton = document.querySelector("#remove-one");
+    const ring = document.querySelector("#progress-ring");
+    const goalCopy = document.querySelector("#goal-copy");
+    const goalPill = document.querySelector("#goal-pill");
+
+    document.querySelector("#today").textContent = date.toLocaleDateString(undefined, {
+      weekday: "long",
+      month: "long",
+      day: "numeric"
+    });
+
+    function save() {
+      localStorage.setItem(storageKey, JSON.stringify({ count, goal }));
+      render();
+    }
+
+    function render() {
+      const progress = Math.min(100, Math.round((count / goal) * 100));
+      const complete = count >= goal;
+      countOutput.textContent = count;
+      removeButton.disabled = count === 0;
+      document.querySelector("#progress-value").textContent = `${progress}%`;
+      ring.style.setProperty("--progress", `${progress}%`);
+      ring.setAttribute("aria-label", `${progress}% of daily goal`);
+      goalPill.textContent = complete ? "Goal reached!" : "Keep going";
+      goalCopy.textContent = complete
+        ? "You did it! Take a moment to feel proud."
+        : count === 0
+          ? "A little progress is still progress."
+          : `${goal - count} more ${goal - count === 1 ? "win" : "wins"} to reach your goal.`;
+      goalCopy.classList.toggle("complete", complete);
+      document.querySelectorAll(".goal-button").forEach((button) => {
+        button.setAttribute("aria-pressed", Number(button.dataset.goal) === goal);
+      });
+    }
+
+    document.querySelector("#add-one").addEventListener("click", () => {
+      count += 1;
+      save();
+    });
+    removeButton.addEventListener("click", () => {
+      if (count > 0) {
+        count -= 1;
+        save();
+      }
+    });
+    document.querySelectorAll(".goal-button").forEach((button) => {
+      button.addEventListener("click", () => {
+        goal = Number(button.dataset.goal);
+        save();
+      });
+    });
+    document.querySelector("#reset").addEventListener("click", () => {
+      count = 0;
+      save();
+    });
+
+    render();
+  </script>
+</body>
+</html>
