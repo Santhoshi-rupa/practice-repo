@@ -1,0 +1,45 @@
+name: Test Little Wins
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Start app and check its page
+        shell: bash
+        run: |
+          set -euo pipefail
+          python app.py > server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+
+          page="$RUNNER_TEMP/little-wins.html"
+          for attempt in {1..20}; do
+            if curl --fail --silent http://127.0.0.1:8000/ -o "$page"; then
+              break
+            fi
+            sleep 1
+          done
+
+          if [ ! -s "$page" ]; then
+            cat server.log
+            echo "App did not return a page."
+            exit 1
+          fi
+
+          grep -Fq '<title>Little Wins' "$page"
